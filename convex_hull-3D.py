@@ -69,7 +69,7 @@ points = points[distances <= dmax]
 # saving excel file
 df = pandas.DataFrame(points)
 df.to_excel(excel_writer = "20GPa.xlsx")
- 
+
 # unpacking filtered data
 x, y, energy, distances, IDs, inhull = points.T
 

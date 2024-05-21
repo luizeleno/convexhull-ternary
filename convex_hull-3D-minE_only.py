@@ -1,18 +1,7 @@
-###############################################################
-# Prof. Luiz T. F. Eleno
-# luizeleno@usp.br
-# 2024.04.03
-# code to plot ternary convex hull with tooltips
-# CSV file must have the structure found in energy_data.csv
-# Code generate_example_data.py generates an example
-##############################################################
-
 import numpy as np
 import pandas
 import scipy.spatial
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib import rc
 import distance
 import gibbs
 
@@ -38,7 +27,7 @@ nat = xA + xB + xC
 IDs = data['ID'].values
 
 # calculating formation energies
-energy = data['E'].values  # energies already in eV/atom
+energy = data['E'].values # energies already in eV/atom
 EA = energy[idEA] #/ nat[idEA]
 EB = energy[idEB] #/ nat[idEB]
 EC = energy[idEC] #/ nat[idEC]
@@ -48,6 +37,16 @@ energy  = (energy - (xA * EA + xB * EB + xC * EC) / nat ) * 1000  # meV
 xA = xA / nat
 xB = xB / nat
 xC = xC / nat
+
+# Creating new dataframe
+data = pandas.DataFrame({'xA': xA, 'xB': xB, 'xC': xC, 'E': energy, 'ID': IDs})
+
+# Filtering only min E for each composition
+data.sort_values(by='E', inplace=True, ascending=True)
+data.drop_duplicates(subset=['xA', 'xB', 'xC'], keep='first', inplace=True, ignore_index=True)
+xA, xB, xC = data['xA'].values, data['xB'].values, data['xC'].values
+energy = data['E'].values
+IDs = data['ID'].values
 
 # preparing for convex hull calculation
 points = np.column_stack((xB, xC, energy))
@@ -71,7 +70,7 @@ points = points[distances <= dmax]
 # saving excel file
 df = pandas.DataFrame(points)
 df.to_excel(excel_writer = "20GPa.xlsx")
- 
+
 # unpacking filtered data
 x, y, energy, distances, IDs, inhull = points.T
 
@@ -88,22 +87,19 @@ xtri_hull, ytri_hull = gibbs.transform_coords(data_hull[:, 0], data_hull[:, 1])
 # CREATING GRAPHICS
 
 fig = plt.figure(figsize=(8, 7))
-ax = fig.add_subplot(aspect='equal')
+ax = plt.axes(projection='3d')
 
-rc('font',**{'family':'Palatino','serif':['Palatino'], 'size':10})
-rc('text', usetex=True)
-
-mpl.rcParams['axes.linewidth'] = 3.5
-mpl.rcParams['xtick.major.width'] = 3.5
-mpl.rcParams['ytick.major.width'] = 3.5
-
-# DRAWING GIBBS TRIANGLE
-gibbs.triangle(ax, A, B, C)
+ax.set_xlabel(f'x_{B}')
+ax.set_ylabel(f'x_{C}')
 
 # PLOTTING DATA
 
-allpoints = ax.scatter(x_tri, y_tri, c=distances, marker='s', s=60, cmap='coolwarm', edgecolors='black', alpha=.4,  zorder=5)
-hullpoints = ax.plot(xtri_hull, ytri_hull, 'ok', zorder=6, markersize=10)
+allpoints = ax.scatter(x_tri, y_tri, energy, c=distances, marker='s', s=60, cmap='coolwarm', edgecolors='black', alpha=.4,  zorder=5)
+hullpoints = ax.plot(xtri_hull, ytri_hull, data_hull[:, 2], 'ok', zorder=6, markersize=10)
+
+# creating tooltips
+# gibbs.annotate(data_hull, hullpoints)
+gibbs.annotate(points, allpoints)
 
 # TRIANGULATION
 for trio in hull.simplices:
@@ -111,15 +107,13 @@ for trio in hull.simplices:
     x1_tri, x2_tri = gibbs.transform_coords(x1, x2)
     x1_tri = np.append(x1_tri, x1_tri[0])
     x2_tri = np.append(x2_tri, x2_tri[0])
-    plt.plot(x1_tri, x2_tri, 'k-')
-
-# creating tooltips
-# gibbs.annotate(data_hull, hullpoints)
-gibbs.annotate(points, allpoints)
+    energy_tri = np.append(hull.points[trio, 2], hull.points[trio[0], 2])
+    plt.plot(x1_tri, x2_tri, energy_tri, 'k-')
 
 # SHOW RESULT
 cbar = plt.colorbar(allpoints)
-cbar.set_label(r'$\Delta E_\textrm{hull}$\,(meV/atom)', fontsize=16)
+cbar.set_label(r'$\Delta E_{\mathrm{hull}}$ (meV/atom)', fontsize=16)
 plt.tight_layout()
-plt.savefig('convex_hull.png', bbox_inches='tight', dpi=300)
+plt.savefig('convex_hull-3D.png', bbox_inches='tight', dpi=300)
 plt.show()
+
