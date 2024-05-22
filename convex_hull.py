@@ -64,13 +64,13 @@ distances = distance.dist(hull)
 points = np.column_stack((points, distances, IDs, np.zeros_like(distances)))  # adding column to indicate if point belongs to hull
 points[hull.vertices, -1] = 1  # 1 if in hull, 0 otherwise
 
-# saving excel file
-df = pandas.DataFrame(points)
-df.to_excel(excel_writer = "20GPa.xlsx")
-
 # filtering out larger distances
 dmax =  100  # np.inf
 points = points[distances <= dmax]
+
+# saving excel file
+df = pandas.DataFrame(points)
+df.to_excel(excel_writer = "20GPa.xlsx")
 
 # unpacking filtered data
 x, y, energy, distances, IDs, inhull = points.T
