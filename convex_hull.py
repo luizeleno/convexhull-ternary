@@ -58,20 +58,20 @@ IDs = IDs[energy <= 0]  # getting point IDs
 hull = scipy.spatial.ConvexHull(points)
 
 # findind distances
-distances = distance.dist(hull, debug=True)
+distances = distance.dist(hull)
 
 # creating array with all data
 points = np.column_stack((points, distances, IDs, np.zeros_like(distances)))  # adding column to indicate if point belongs to hull
 points[hull.vertices, -1] = 1  # 1 if in hull, 0 otherwise
 
-# filtering out larger distances
-dmax = np.inf
-points = points[distances <= dmax]
-
 # saving excel file
 df = pandas.DataFrame(points)
 df.to_excel(excel_writer = "20GPa.xlsx")
- 
+
+# filtering out larger distances
+dmax =  100  # np.inf
+points = points[distances <= dmax]
+
 # unpacking filtered data
 x, y, energy, distances, IDs, inhull = points.T
 
@@ -114,8 +114,8 @@ for trio in hull.simplices:
     plt.plot(x1_tri, x2_tri, 'k-')
 
 # creating tooltips
-# gibbs.annotate(data_hull, hullpoints)
-gibbs.annotate(points, allpoints)
+gibbs.annotate(data_hull, hullpoints)
+# gibbs.annotate(points, allpoints)
 
 # SHOW RESULT
 cbar = plt.colorbar(allpoints)

@@ -20,7 +20,7 @@ def dist(hull, debug=False):
             trio = hull.simplices[T]
             eq = hull.equations[T]
             Dn = (eq[:-1] @ hull.points[P] + eq[-1]) / eq[2]
-            if Dn < D and Dn > 0:
+            if Dn < D and Dn >= 0:
                 D = Dn
         distances[P] = D
 

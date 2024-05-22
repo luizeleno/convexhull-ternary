@@ -75,7 +75,7 @@ points = np.column_stack((points, distances, IDs, np.zeros_like(distances)))  # 
 points[hull.vertices, -1] = 1  # 1 if in hull, 0 otherwise
 
 # filtering out larger distances
-dmax = np.inf
+dmax = 100 # np.inf
 points = points[distances <= dmax]
 
 # saving excel file
